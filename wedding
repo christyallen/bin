@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+## Ask for date of wedding
+read -p "Date of Wedding (YYYY-MM-DD): " -e -i `date +"%Y-%m-%d"` DATE
+## Ask for name of bride
+read -p "First Name of Bride: " BRIDE
+
+function calculateDate {
+    date --date="${DATE} - $1 days" +%Y-%m-%d
+ }
+
+function formatDate {
+    date --date="${DATE}" +$1
+}
+
+MONTH=$(formatDate %b)
+DAY=$(formatDate %d)
+ONEWEEK=$(calculateDate 7)
+THREEMONTHS=$(calculateDate 90)
+FOLORG=$(calculateDate 85)
+TWOWEEKS=$(calculateDate 14)
+ONEMONTH=$(calculateDate 30)
+DOOR=$(calculateDate 4)
+DEPOSIT_DUE=$(calculateDate 7)
+BRIDEWED=`echo "${BRIDE} (${MONTH} ${DAY})"`
+
+TODAY=$(date +"%Y-%m-%d")
+TAG=${MONTH}${DAY}${BRIDE}
+FOLONEWEEK=$(date --date="7 days" +%Y-%m-%d) 
+
+## Contact Sound Tech
+## Here I will place a script to mail Adam and Ward
+/usr/local/bin/rtm add Contact with Sound Tech about ${MONTH} ${DAY} wedding ${THREEMONTHS} t:${TAG} 
+
+## RTM Task to Follow up with Sound Tech
+
+/usr/local/bin/rtm add Follow with with Sound Tech about ${MONTH} ${DAY} wedding ${FOLONEWEEK} t:${TAG} 
+
+## if yes, then task to email bride organist/pianist info today and task to contact organist/pianist today and task to follow up with organist/pianist 1 week from today. if no, then skip this step. If unsure then task to follow up with bride about organist and pianist 90 days before wedding.
+
+read -p "Will they be using an Organist/Pianist? [y/n/u] " ORGANIST
+case "$ORGANIST" in 
+  y|Y|yes|yes ) 
+	## if yes then
+	/usr/local/bin/rtm add Email Organist Pianist Info to ${BRIDEWED} ${TODAY} t:${TAG} 
+	/usr/local/bin/rtm add Contact Organist Pianist ${BRIDEWED} ${TODAY} t:${TAG} 
+	/usr/local/bin/rtm add Follow up with Organist Pianist ${BRIDEWED} ${FOLONEWEEK} t:${TAG} 
+;;
+  n|N|no|No ) 
+	echo "No Organist/Pianist"
+;;
+  u|u|unsure|Unsure ) 
+	/usr/local/bin/rtm add Ask up with ${BRIDEWED} about Organist Pianist ${THREEMONTHS} t:${TAG} 
+	/usr/local/bin/rtm add Follow up with ${BRIDEWED} about Organist Pianist ${FOLORG} t:${TAG} 
+	
+;;
+  * ) 
+	echo "Please answer [y/n/u]";;
+esac
+
+
+# Add task to meet with Bride 3 months prior
+
+/usr/local/bin/rtm add Set Wedding Meeting with ${BRIDEWED} ${THREEMONTHS} t:${TAG}
+
+# Add task to send email to Bride to verify arrival times and payments due 2 weeks prior
+/usr/local/bin/rtm add Send Email to ${BRIDEWED} about payment and arrival times ${TWOWEEKS} t:${TAG}
+
+# Add task to schedule doors to be opened and locked 1 week prior
+/usr/local/bin/rtm add Schedule doors to be opened and locked wedding ${BRIDEWED} ${ONEWEEK} t:${TAG}
+
+# Add task to follow up on Final Payments received 1 week prior
+/usr/local/bin/rtm add Follow up on Final Payments wedding ${BRIDEWED} ${ONEWEEK} t:${TAG}
+
+# Add task damage deposit refund slip to Ella Mae day of wedding
+/usr/local/bin/rtm add Request Damage Deposit Refund to Ella Mae wedding ${DATE} t:${TAG}
+
+echo -----------------------
+echo Tasks Added to Remember the Milk for ${MONTH} ${DAY} wedding 
